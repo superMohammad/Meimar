@@ -25,7 +25,9 @@ mosque, hospital, mall or university.
 
 <div align="center">
 
-![A tour of the map](docs/images/map-tour.gif)
+<a href="docs/meimar-demo.mp4"><img src="docs/images/map-tour.gif" alt="A tour of the map"></a>
+
+**[▶ Watch the 36-second walkthrough](docs/meimar-demo.mp4)** — every page of the platform, in Arabic
 
 </div>
 
