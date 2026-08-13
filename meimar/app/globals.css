@@ -1,0 +1,1898 @@
+/**
+ * Meimar design tokens and base styles.
+ *
+ * The five brand colours are the project's identity and are used verbatim as
+ * the sand ramp. Everything else derives from them or from a neutral ink scale,
+ * so the palette stays recognisable without every surface being beige.
+ *
+ * Layout uses logical properties throughout (inline-start/end, margin-inline)
+ * so the Arabic RTL default and the English LTR toggle mirror without a second
+ * stylesheet.
+ */
+
+:root {
+  /* Brand palette, as specified. */
+  --sand-50: #ede0d4;
+  --sand-100: #e6ccb2;
+  --sand-200: #ddb892;
+  --sand-400: #b08968;
+  --sand-700: #7f5539;
+
+  --surface: #fffdfb;
+  --surface-raised: #ffffff;
+  --surface-sunken: var(--sand-50);
+
+  --ink: #2b1f17;
+  --ink-soft: #6b5849;
+  /* Secondary label colour, and therefore the colour of most of the text in
+     the product: filter labels, stat keys, disclaimers, service counts, legend
+     figures. It used to be #9a8878, which is 3.36:1 against the page — under
+     the 4.5:1 floor at any size, and most of its consumers are 11-12px. This
+     value measures 6.17:1 on --surface and 4.84:1 on --surface-sunken, which
+     several of them sit on. */
+  --ink-faint: #6f5d4e;
+
+  --border: color-mix(in srgb, var(--sand-200) 60%, transparent);
+  --border-strong: var(--sand-200);
+
+  --accent: var(--sand-700);
+  --accent-hover: #6a462d;
+  --accent-contrast: #fffdfb;
+
+  /* Pin and map-overlay colours are NOT here. They live in
+     `components/map/palette.ts`, which is what actually draws them; the tokens
+     that used to sit at this spot were a second, contradictory answer to the
+     same question and were never read by anything. */
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 1px 2px rgb(43 31 23 / 0.06), 0 1px 3px rgb(43 31 23 / 0.04);
+  --shadow-md: 0 4px 12px rgb(43 31 23 / 0.08), 0 2px 4px rgb(43 31 23 / 0.04);
+  --shadow-lg: 0 12px 32px rgb(43 31 23 / 0.14);
+
+  --header-height: 56px;
+
+  /* Minimum hit area for a finger. WCAG 2.5.5 and both platform HIGs land in
+     the 44-48px range; applied under `pointer: coarse` further down. */
+  --touch-target: 44px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface: #17120e;
+    --surface-raised: #201913;
+    --surface-sunken: #120e0a;
+
+    --ink: #f0e6dc;
+    --ink-soft: #c0ab98;
+    /* 5.34:1 on --surface-raised, up from 4.19:1. */
+    --ink-faint: #a08b78;
+
+    --border: color-mix(in srgb, var(--sand-400) 28%, transparent);
+    --border-strong: color-mix(in srgb, var(--sand-400) 45%, transparent);
+
+    --accent: var(--sand-200);
+    --accent-hover: var(--sand-100);
+    --accent-contrast: #17120e;
+
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  /* Removes the 300ms double-tap-to-zoom delay on touch without disabling
+     pinch zoom, which `user-scalable=no` would and which breaks accessibility. */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: color-mix(in srgb, var(--sand-400) 30%, transparent);
+}
+
+body {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+
+  /* Pins the footer to the bottom of short pages.
+
+     Header, main and footer are siblings in the body, and nothing was making
+     main absorb the leftover height -- so on any page shorter than the window
+     the footer stopped wherever the content did. On /contact at 1440x900 it
+     ended at y=601 with 299px of empty page under it, and it landed somewhere
+     different on every page, which is what makes a site feel unfinished. */
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
+}
+
+/* Takes the slack, so the footer is pushed to the fold and no further. `1 0
+   auto` rather than `1`: a long page must still grow past the viewport instead
+   of being squeezed into it. */
+body > main {
+  flex: 1 0 auto;
+}
+
+/* The map is its own full-height application shell and manages its own
+   scrolling; it must not be stretched or shrunk by the page flow. */
+.meimar-shell {
+  flex: 0 0 auto;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), var(--font-sans), serif;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+  /* Keeps a lone word from dropping to its own line under a heading. */
+  text-wrap: balance;
+}
+
+/* Anchored headings clear the sticky header instead of hiding beneath it. */
+:target {
+  scroll-margin-top: 80px;
+}
+
+/* Visible only while focused: the first tab stop, out of the way otherwise. */
+.meimar-skip-link {
+  position: absolute;
+  inset-block-start: -100%;
+  inset-inline-start: 8px;
+  z-index: 2000;
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--touch-target);
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.meimar-skip-link:focus {
+  inset-block-start: 8px;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+:where(a, button, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Numerals stay Western in both locales: the listing data, the price filters
+   and the map labels all read as one system that way, and Saudi interfaces
+   commonly use them. */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Application layout
+
+   Everything below uses logical properties (inline-start/end, inset-inline)
+   rather than left/right, so the Arabic RTL default and the English LTR
+   toggle mirror from one stylesheet.
+
+   BREAKPOINTS. There is no build step to hold these as tokens, so they are a
+   convention -- use these four and no others:
+
+     <= 600px    phone
+     <= 900px    large phone, tablet portrait
+     <= 1200px   tablet landscape, small laptop
+     >  1200px   desktop
+
+   This replaces a single `max-width: 720px` that was chosen once for the
+   detail panel and then reused for the filter bar and the layer control. The
+   result was that everything between 721px and desktop -- every tablet --
+   got the desktop layout in a space that could not hold it.
+
+   SIZE BY INPUT, NOT BY WIDTH. Touch sizing lives under
+   `@media (pointer: coarse)`, near the bottom of this file. Width does not
+   tell you whether a finger is doing the pointing: a 1024px tablet was being
+   handed 30px controls.
+   --------------------------------------------------------------------------- */
+
+.meimar-shell {
+  display: flex;
+  flex-direction: column;
+  block-size: 100dvh;
+  overflow: hidden;
+}
+
+/* One row, always. `flex-wrap: wrap` here is what produced a 233px header on
+   a 1440px desktop and 294px on a tablet -- a quarter to a third of the
+   viewport spent on chrome, on a map-first product. Nothing wraps now; the
+   fields that do not fit live in the filters popover. */
+.meimar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 16px;
+  block-size: var(--header-height);
+  flex-shrink: 0;
+  background: var(--surface-raised);
+  border-block-end: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  z-index: 1000;
+  flex-wrap: nowrap;
+  overflow: visible;
+}
+
+.meimar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  flex-shrink: 0;
+  /* It is a link on every page now, including the map. */
+  text-decoration: none;
+}
+
+/* Keeps the mark optically aligned with the wordmark's baseline rather than
+   sitting on the flex line however the SVG box happens to fall. */
+.meimar-logo {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.meimar-wordmark {
+  font-family: var(--font-display), serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.meimar-locale-switch {
+  margin-inline-start: auto;
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.meimar-locale-switch:hover {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+/* Filters */
+
+.meimar-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  min-inline-size: 0;
+}
+
+/* Trigger for the filters popover, with its active-filter badge. */
+
+.meimar-filters-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.meimar-filters-trigger:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.meimar-filters-badge {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 18px;
+  block-size: 18px;
+  padding-inline: 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* The filters panel.
+
+   A native popover, so the top layer, light dismiss and Escape come from the
+   platform rather than from state, an outside-click listener and a focus trap.
+   `inset: auto` undoes the UA's centring so the rules below can place it. */
+
+.meimar-filters-panel {
+  inset: auto;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-lg);
+  color: var(--ink);
+  inline-size: min(340px, calc(100vw - 24px));
+  max-block-size: min(560px, calc(100dvh - var(--header-height) - 24px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  /* Under the header, aligned to the reading edge. Anchor positioning would
+     tie it to the trigger exactly, but is not yet broadly supported; the
+     header is a fixed height, so this lands in the same place. */
+  position: fixed;
+  inset-block-start: calc(var(--header-height) + 8px);
+  inset-inline-start: 16px;
+}
+
+.meimar-filters-panel::backdrop {
+  background: rgb(24 12 6 / 0.18);
+}
+
+/* On a phone the same popover becomes a bottom sheet.
+
+   Both conditions matter. `pointer: coarse` alone would put a sheet across a
+   1024px tablet, where a dropdown is right; `max-width` alone would give a
+   narrow desktop window a sheet it cannot dismiss by reaching down. A sheet is
+   for a thumb on a small screen, which is exactly the intersection. */
+@media (pointer: coarse) and (max-width: 600px) {
+  .meimar-filters-panel {
+    inset: auto 0 0 0;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    max-block-size: 80dvh;
+    border-inline: none;
+    border-block-end: none;
+    border-start-start-radius: var(--radius-lg);
+    border-start-end-radius: var(--radius-lg);
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  /* A grab affordance, so the sheet reads as draggable-looking furniture
+     rather than a panel that happened to land at the bottom. */
+  .meimar-filters-panel-head::before {
+    content: "";
+    position: absolute;
+    inset-block-start: 6px;
+    inset-inline: 0;
+    margin-inline: auto;
+    inline-size: 36px;
+    block-size: 4px;
+    border-radius: 999px;
+    background: var(--border-strong);
+  }
+
+  .meimar-filters-panel-head {
+    position: relative;
+    padding-block-start: 18px;
+  }
+}
+
+.meimar-filters-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 10px;
+}
+
+.meimar-filters-panel-head h2 {
+  font-size: 16px;
+  margin: 0;
+}
+
+.meimar-filters-panel-head button {
+  inline-size: 32px;
+  block-size: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--ink-soft);
+  flex-shrink: 0;
+}
+
+.meimar-filters-panel-head button:hover {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.meimar-filters-panel-body {
+  display: grid;
+  gap: 12px;
+  padding: 0 16px 14px;
+}
+
+/* A `<select>` sizes itself to its widest option, and the district list holds
+   166 long Arabic names -- so these fields wanted 474px inside a 328px sheet
+   and hung 130px off the edge. Grid and flex children also default to
+   `min-width: auto`, which refuses to shrink below that intrinsic width, so
+   the floor has to be dropped explicitly before `100%` means anything. */
+.meimar-filters-panel-body .meimar-field,
+.meimar-filters-panel-body .meimar-range {
+  min-inline-size: 0;
+}
+
+.meimar-filters-panel-body select,
+.meimar-filters-panel-body input {
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.meimar-filters-panel-body .meimar-range input {
+  flex: 1 1 0;
+}
+
+/* Distance search, inside the filters panel */
+
+.meimar-near {
+  padding-block-start: 12px;
+  border-block-start: 1px solid var(--border);
+}
+
+.meimar-near h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-block-end: 8px;
+}
+
+.meimar-near-pick {
+  inline-size: 100%;
+  padding: 9px 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.meimar-near-pick:hover,
+.meimar-near-pick[aria-pressed="true"] {
+  border-color: var(--accent);
+  border-style: solid;
+  color: var(--ink);
+}
+
+.meimar-near-active {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.meimar-near-active button {
+  padding: 4px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.meimar-near-active button:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.meimar-near-radii {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+}
+
+.meimar-near-radii button {
+  padding: 6px 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.meimar-near-radii button.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+}
+
+.meimar-near-hint {
+  margin: 8px 0 0;
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--sand-200) 45%, transparent);
+  border: 1px solid var(--border-strong);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.meimar-near .meimar-disclaimer {
+  margin-block-start: 8px;
+}
+
+.meimar-filters-panel-foot {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+  border-block-start: 1px solid var(--border);
+  position: sticky;
+  inset-block-end: 0;
+  background: var(--surface-raised);
+}
+
+.meimar-filters-apply {
+  padding: 8px 18px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.meimar-filters-apply:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.meimar-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.meimar-field > span {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.meimar-field select,
+.meimar-field input {
+  font: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  min-inline-size: 118px;
+}
+
+.meimar-field select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.meimar-field-narrow select {
+  min-inline-size: 78px;
+}
+
+/* A range is a `role="group"`, not a `<label>`, so it needs the column layout
+   `.meimar-field` gets from being a flex label elsewhere. */
+.meimar-field-range > span {
+  display: block;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.meimar-range {
+  display: flex;
+  gap: 4px;
+}
+
+.meimar-range input {
+  min-inline-size: 96px;
+}
+
+.meimar-filter-reset {
+  align-self: flex-end;
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.meimar-filter-reset:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+/* Map */
+
+.meimar-body {
+  position: relative;
+  flex: 1;
+  min-block-size: 0;
+}
+
+.meimar-map-root,
+.meimar-map {
+  position: absolute;
+  inset: 0;
+}
+
+.meimar-map {
+  background: var(--surface-sunken);
+}
+
+.meimar-map-error,
+.meimar-error {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline: 12px;
+  z-index: 900;
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: #8c2f1f;
+  color: #fff;
+  font-size: 13px;
+}
+
+.meimar-status {
+  position: absolute;
+  /* Clears the iOS home indicator. The map is full-bleed, so without the inset
+     this pill sits under the system gesture bar. */
+  inset-block-end: calc(16px + env(safe-area-inset-bottom));
+  /* Centred with auto margins, not `inset-inline-start: 50%` plus a
+     `translateX(-50%)`. `translateX` is not direction-aware: it always shifts
+     left, so in RTL -- which is the default locale -- it moved the pill half
+     its own width off centre and clipped it against the edge on a phone. */
+  inset-inline: 0;
+  margin-inline: auto;
+  inline-size: fit-content;
+  max-inline-size: calc(100% - 24px);
+  z-index: 800;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Leaflet overrides */
+
+.leaflet-container {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  background: var(--surface-sunken);
+}
+
+.meimar-price-label-wrapper {
+  background: none;
+  border: none;
+}
+
+/* Price pills sit on satellite imagery, so they carry their own opaque dark
+   ground rather than the page surface. A translucent or paper-toned pill is
+   unreadable over the mixed sand, concrete and shadow of an aerial view. */
+/* Centred on its pin by absolute positioning, not by inline flow.
+   The Leaflet div-icon wrapper is zero-sized, so an inline-block child is laid
+   out from the wrapper's start edge -- which under `dir="rtl"` is its RIGHT.
+   The pill therefore grew leftwards and `translateX(-50%)` pushed it further
+   the same way, landing every price about a full label-width away from the pin
+   it belonged to. Measured at 45-78px off in Arabic, which is the default
+   locale. Anchoring to a physical `left` makes the offset direction-agnostic,
+   which is correct: this centres on a point on a map, not on a line of text. */
+.meimar-price-label {
+  position: absolute;
+  inset-block-start: 0;
+  left: 0;
+  transform: translateX(-50%);
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgb(24 12 6 / 0.88);
+  border: 1px solid rgb(255 255 255 / 0.35);
+  color: #fff4e6;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.5);
+  font-variant-numeric: tabular-nums;
+}
+
+.meimar-price-label.is-selected {
+  background: #ffe98a;
+  border-color: #fff;
+  color: #2b1206;
+}
+
+.meimar-tooltip {
+  font-size: 12px;
+}
+
+/* Panel */
+
+.meimar-panel {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 900;
+  /* Scales with the viewport instead of a flat 380px, which was 49% of a
+     768px tablet -- half the map gone to show one listing. Clamped at both
+     ends so it never gets too narrow to read a price or wide enough to
+     dominate a large display. */
+  inline-size: clamp(320px, 34vw, 460px);
+  max-inline-size: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+  background: var(--surface-raised);
+  border-inline-start: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.meimar-panel h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-soft);
+  margin-block-end: 8px;
+}
+
+.meimar-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.meimar-panel-header button {
+  background: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  inline-size: 30px;
+  block-size: 30px;
+  color: var(--ink-soft);
+  flex-shrink: 0;
+}
+
+.meimar-panel-header button:hover {
+  background: var(--surface-sunken);
+}
+
+.meimar-panel-price {
+  font-family: var(--font-display), serif;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.meimar-panel-place {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+.meimar-panel-title {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.meimar-panel-body {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+}
+
+.meimar-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.meimar-stats dt {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.meimar-stats dd {
+  margin: 1px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.meimar-amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.meimar-amenities li {
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* Nearby services
+
+   There is no 0-100 score and no score bar: the composite was removed because
+   OSM coverage across the categories varies by more than 3x, and the rules that
+   drew it were left behind here for a while afterwards. */
+
+.meimar-services > h3 {
+  margin-block-end: 8px;
+}
+
+.meimar-radius-picker {
+  display: flex;
+  gap: 4px;
+  margin-block-end: 10px;
+}
+
+.meimar-radius-picker button {
+  flex: 1;
+  padding: 5px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.meimar-radius-picker button.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+}
+
+.meimar-services-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.meimar-services-list li {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 12px;
+  padding-block-end: 5px;
+  border-block-end: 1px solid var(--border);
+}
+
+.meimar-service-name {
+  color: var(--ink);
+}
+
+.meimar-service-distance {
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.meimar-service-count {
+  color: var(--ink-faint);
+  min-inline-size: 62px;
+  text-align: end;
+}
+
+/* Neighborhood card */
+
+.meimar-neighborhood {
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+}
+
+.meimar-neighborhood h3 {
+  margin-block-end: 2px;
+}
+
+.meimar-neighborhood-name {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.meimar-insufficient strong {
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.meimar-insufficient p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--ink-faint);
+  line-height: 1.5;
+}
+
+/* Scoped rather than flagged: `.meimar-insufficient p` above is more specific
+   than a lone class, so this has to match it to win. */
+.meimar-insufficient .meimar-insufficient-count {
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.meimar-disclaimer {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink-faint);
+}
+
+@media (max-width: 600px) {
+  .meimar-panel {
+    inset-block-start: auto;
+    block-size: 62dvh;
+    inline-size: 100%;
+    border-inline-start: none;
+    border-block-start: 1px solid var(--border);
+    border-start-start-radius: var(--radius-lg);
+    border-start-end-radius: var(--radius-lg);
+    padding-block-end: calc(16px + env(safe-area-inset-bottom));
+  }
+
+  /* The wordmark stays. Hiding it was a reflex from when the header also
+     carried two selects; with those in the panel there is room, and it was
+     hiding the brand name on the content pages too, which have room to spare. */
+  .meimar-filters-trigger span {
+    display: none;
+  }
+
+  .meimar-filters-trigger {
+    padding-inline: 12px;
+  }
+}
+
+
+/* Valuation */
+
+.meimar-valuation {
+  padding: 12px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-strong);
+}
+
+.meimar-valuation h3 {
+  margin-block-end: 10px;
+}
+
+.meimar-valuation-figures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 0;
+}
+
+.meimar-valuation-figures dt {
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.meimar-valuation-figures dd {
+  margin: 1px 0 0;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: var(--font-display), serif;
+}
+
+.meimar-valuation-estimate {
+  color: var(--accent);
+}
+
+/* Deliberately neutral. The deviation is a measured difference between one
+   asking price and a model of other asking prices -- not a verdict on the
+   listing -- so it is never coloured as approval or warning. */
+.meimar-valuation-deviation {
+  margin: 10px 0 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.meimar-valuation-range {
+  margin: 3px 0 8px;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+/* What the estimate rests on: comparable count and the typical per-m² spread.
+   This had no rule at all, so it inherited 15px body text and rendered larger
+   than the figures it was explaining. */
+.meimar-valuation-basis {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.meimar-valuation.is-empty {
+  background: transparent;
+  border-style: dashed;
+}
+
+.meimar-valuation-none {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink-faint);
+}
+
+/* Estimator page */
+
+.meimar-page {
+  max-inline-size: 720px;
+  margin-inline: auto;
+  padding: 32px 20px 64px;
+}
+
+.meimar-page-header {
+  margin-block-end: 24px;
+}
+
+.meimar-page-header h1 {
+  font-size: 28px;
+  margin-block: 8px 4px;
+}
+
+.meimar-page-header p {
+  margin: 0 0 4px;
+  color: var(--ink-soft);
+  font-size: 14px;
+}
+
+.meimar-back {
+  font-family: var(--font-display), serif;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.meimar-estimate-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.meimar-estimate-location {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.meimar-estimate-location legend {
+  padding-inline: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.meimar-estimate-location .meimar-disclaimer {
+  margin-block-end: 8px;
+}
+
+.meimar-location-picker {
+  block-size: 260px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.meimar-estimate-point {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.meimar-estimate-point button {
+  padding: 4px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.meimar-estimate-point button:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.meimar-estimate-submit {
+  grid-column: 1 / -1;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+}
+
+.meimar-estimate-submit:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.meimar-estimate-result {
+  margin-block-start: 24px;
+  padding: 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.meimar-estimate-result h2 {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.meimar-estimate-value {
+  font-family: var(--font-display), serif;
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 4px 0 0;
+}
+
+.meimar-warn {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--sand-200) 45%, transparent);
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.meimar-error-inline {
+  margin-block-start: 16px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: #8c2f1f;
+  color: #fff;
+  font-size: 13px;
+}
+
+/* ---------------------------------------------------------------------------
+   Site chrome and content pages
+   --------------------------------------------------------------------------- */
+
+.meimar-site-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 24px;
+  background: var(--surface-raised);
+  border-block-end: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.meimar-site-header nav { display: flex; gap: 18px; flex-wrap: wrap; }
+
+.meimar-site-header nav a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.meimar-site-header nav a:hover { color: var(--accent); }
+
+.meimar-site-footer {
+  padding: 32px 24px 48px;
+  border-block-start: 1px solid var(--border);
+  background: var(--surface-sunken);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  text-align: center;
+}
+
+.meimar-site-footer nav {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.meimar-site-footer a {
+  color: var(--ink-soft);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.meimar-site-footer p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--ink-faint);
+  max-inline-size: 60ch;
+}
+
+.meimar-footer-brand {
+  font-family: var(--font-display), serif;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* Landing */
+
+.meimar-landing { max-inline-size: 1040px; margin-inline: auto; padding: 0 24px 64px; }
+
+.meimar-hero { padding-block: 64px 48px; text-align: center; }
+
+.meimar-hero h1 { font-size: clamp(28px, 5vw, 48px); margin-block-end: 12px; }
+
+.meimar-hero-sub {
+  margin: 0 auto;
+  max-inline-size: 58ch;
+  font-size: 17px;
+  color: var(--ink-soft);
+}
+
+.meimar-hero-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-block: 28px;
+  flex-wrap: wrap;
+}
+
+.meimar-button {
+  display: inline-block;
+  padding: 11px 22px;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 15px;
+  border: 1px solid var(--accent);
+}
+
+.meimar-button.is-secondary { background: transparent; color: var(--accent); }
+
+.meimar-hero-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 20px;
+  margin: 40px 0 0;
+  padding-block-start: 28px;
+  border-block-start: 1px solid var(--border);
+}
+
+.meimar-hero-stats dt {
+  font-family: var(--font-display), serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.meimar-hero-stats dd { margin: 2px 0 0; font-size: 13px; color: var(--ink-faint); }
+
+.meimar-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  margin-block: 32px;
+}
+
+.meimar-features article {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+}
+
+.meimar-features h2 { font-size: 17px; margin-block-end: 8px; }
+
+.meimar-features p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.meimar-features a,
+.meimar-featured-districts > a,
+.meimar-honesty a { color: var(--accent); font-size: 14px; font-weight: 500; }
+
+.meimar-featured-districts h2,
+.meimar-honesty h2 { font-size: 20px; margin-block-end: 14px; }
+
+.meimar-featured-districts ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.meimar-featured-districts li a {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  text-decoration: none;
+}
+
+.meimar-district-name { font-weight: 500; color: var(--ink); }
+.meimar-district-city { font-size: 12px; color: var(--ink-faint); }
+.meimar-district-price {
+  margin-inline-start: auto;
+  font-size: 13px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.meimar-honesty {
+  margin-block-start: 40px;
+  padding: 24px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+}
+
+.meimar-honesty p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  max-inline-size: 70ch;
+}
+
+/* Prose and district pages */
+
+.meimar-prose section { margin-block: 28px; }
+.meimar-prose h2 { font-size: 19px; margin-block-end: 10px; }
+
+.meimar-prose p {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--ink-soft);
+  max-inline-size: 70ch;
+  margin-block: 0 12px;
+}
+
+.meimar-page h1 { font-size: clamp(24px, 4vw, 34px); margin-block: 8px 10px; }
+
+.meimar-page-lede {
+  font-size: 16px;
+  color: var(--ink-soft);
+  max-inline-size: 68ch;
+  margin-block: 0 20px;
+}
+
+.meimar-notice {
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--sand-200) 40%, transparent);
+  border: 1px solid var(--border-strong);
+  font-size: 13px;
+  color: var(--ink);
+  max-inline-size: 70ch;
+}
+
+.meimar-crumbs {
+  display: flex;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin-block-end: 4px;
+}
+
+.meimar-crumbs a { color: var(--accent); text-decoration: none; }
+
+.meimar-stats-wide {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-block: 20px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+}
+
+.meimar-city-block { margin-block: 28px; }
+.meimar-city-block h2 { font-size: 18px; margin-block-end: 10px; }
+.meimar-count { font-size: 12px; color: var(--ink-faint); font-weight: 400; }
+
+.meimar-district-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+}
+
+.meimar-district-list a {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+
+.meimar-district-list a:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+.meimar-district-list span { color: var(--ink-faint); }
+
+.meimar-listing-page > * { margin-block-end: 18px; }
+.meimar-panel-permalink { font-size: 12px; color: var(--accent); }
+
+/* Map layer control */
+
+.meimar-layers {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-start: 12px;
+  z-index: 850;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-md);
+  /* Wide enough for five legend bands reading "1.3K–2.6K" without the columns
+     crushing into each other. At 230px they did, which is half the reason the
+     layer's numbers were unreadable. */
+  max-inline-size: 300px;
+}
+
+.meimar-layer-options { display: flex; gap: 4px; }
+
+.meimar-layer-options button {
+  flex: 1;
+  padding: 5px 9px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.meimar-layer-options button.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+}
+
+.meimar-layer-note {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--ink-faint);
+}
+
+/* The layer cannot draw and is saying why. At faint-grey 11px beside a button
+   that still looks pressed, that message read as decoration and the user
+   concluded the feature was broken. */
+.meimar-layer-note.is-blocking {
+  padding: 7px 9px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--sand-200) 45%, transparent);
+  border: 1px solid var(--border-strong);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.meimar-legend { margin-block-start: 10px; }
+
+.meimar-legend-unit {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-soft);
+}
+
+.meimar-legend-scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  margin-block-start: 5px;
+}
+
+.meimar-legend-step { display: flex; flex-direction: column; gap: 3px; }
+
+.meimar-legend-step i {
+  display: block;
+  block-size: 10px;
+  border-radius: 2px;
+  /* The lightest step is near-white and would otherwise have no edge against
+     the control's own white ground. */
+  border: 1px solid rgb(0 0 0 / 0.18);
+}
+
+/* The figures the whole layer exists to communicate. They were 9px in a colour
+   measuring 3.36:1 — present in the DOM and unreadable on screen. */
+.meimar-legend-step small {
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.meimar-legend-nodata {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+.meimar-legend-nodata i {
+  flex-shrink: 0;
+  inline-size: 16px;
+  block-size: 10px;
+  border: 1px dashed currentColor;
+  border-radius: 2px;
+}
+
+@media (max-width: 600px) {
+  /* Two rows of readable numbers beat five columns of unreadable ones. */
+  .meimar-legend-scale { grid-template-columns: repeat(3, 1fr); }
+
+  /* The layer control and the status pill used to be positioned independently
+     and measurably overlapped: 159x170 at (189,131) against 261x36 at
+     (50,215). Nudging offsets could not fix it, because the legend's height
+     changes -- it gains a row when the no-data entry appears. Stacking them in
+     one flow anchored to the top edge means they cannot collide whatever the
+     legend does. */
+  .meimar-map-controls {
+    position: absolute;
+    inset-block-start: 12px;
+    inset-inline: 12px;
+    z-index: 850;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    /* The column is a layout box, not a surface: clicks pass through to the
+       map everywhere except on the controls themselves. */
+    pointer-events: none;
+  }
+
+  .meimar-map-controls > * {
+    pointer-events: auto;
+    position: static;
+    inline-size: auto;
+    max-inline-size: 100%;
+  }
+
+  .meimar-map-controls .meimar-status {
+    margin-inline: 0;
+    align-self: stretch;
+    text-align: center;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Interaction states and long-content safety
+   --------------------------------------------------------------------------- */
+
+/* Every interactive surface gives feedback on hover. Properties are listed
+   explicitly rather than using `all`, which would animate layout too. */
+.meimar-button,
+.meimar-layer-options button,
+.meimar-radius-picker button,
+.meimar-estimate-submit,
+.meimar-panel-header button,
+.meimar-locale-switch {
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.meimar-button:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.meimar-button.is-secondary:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.meimar-layer-options button:hover,
+.meimar-radius-picker button:hover {
+  border-color: var(--accent);
+  color: var(--ink);
+}
+
+.meimar-estimate-submit:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+
+.meimar-featured-districts li a:hover {
+  border-color: var(--accent);
+}
+
+.meimar-site-footer a:hover,
+.meimar-crumbs a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* The districts index renders every district in the country. Rather than pull
+   in a virtualisation library, the browser is told it may skip layout and
+   paint for off-screen city blocks; `contain-intrinsic-size` keeps the
+   scrollbar honest while they are skipped. */
+.meimar-city-block {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+
+/* Long district and city names must not blow out their row. `min-width: 0`
+   is required for a flex child to be allowed to shrink below its content. */
+.meimar-district-list a,
+.meimar-featured-districts li a {
+  min-inline-size: 0;
+}
+
+.meimar-district-name,
+.meimar-district-list a > :first-child {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meimar-panel-title,
+.meimar-panel-body {
+  overflow-wrap: break-word;
+}
+
+/* Native selects need both colours set explicitly, or the control renders with
+   the platform's own light background in dark mode. */
+.meimar-field select {
+  color-scheme: light dark;
+}
+
+.meimar-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 14px;
+}
+
+/* District search */
+
+.meimar-search {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-block: 8px 12px;
+  max-inline-size: 420px;
+}
+
+.meimar-search label {
+  font-size: 12px;
+  color: var(--ink-faint);
+  font-weight: 500;
+}
+
+.meimar-search input {
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 12px;
+  color: var(--ink);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.meimar-search input:hover {
+  border-color: var(--accent);
+}
+
+.meimar-search-count {
+  margin: 0 0 16px;
+  font-size: 12px;
+  color: var(--ink-faint);
+}
+
+/* ---------------------------------------------------------------------------
+   Touch
+
+   Keyed on the pointer, not the width. Every control below measured under the
+   44px minimum (WCAG 2.5.5): Leaflet's zoom buttons at 30x30, the layer picker
+   at 31px tall, the filter selects at 30px, the site nav links at 22px and
+   prose links at 18px. Because the old rules keyed on width, a 1024px tablet
+   -- a touch device by any definition -- was handed all of them at mouse size.
+
+   Padding rather than font-size throughout, so the type scale is untouched.
+   --------------------------------------------------------------------------- */
+
+@media (pointer: coarse) {
+  .meimar-field select,
+  .meimar-field input,
+  .meimar-range input,
+  .meimar-search input,
+  .meimar-layer-options button,
+  .meimar-radius-picker button,
+  .meimar-locale-switch,
+  .meimar-filters-trigger,
+  .meimar-filters-apply,
+  .meimar-filter-reset,
+  .meimar-panel-header button,
+  .meimar-filters-panel-head button,
+  .meimar-estimate-point button,
+  .meimar-near-pick,
+  .meimar-near-radii button,
+  .meimar-near-active button {
+    min-block-size: var(--touch-target);
+  }
+
+  /* Leaflet sizes its own controls in its own stylesheet, which is imported
+     after this file, so a matching selector loses on source order. The extra
+     ancestor takes specificity to 0,3,1 and settles it without `!important`. */
+  .meimar-map-root .leaflet-touch .leaflet-bar a {
+    inline-size: var(--touch-target);
+    block-size: var(--touch-target);
+    line-height: var(--touch-target);
+  }
+
+  /* The wordmark is hidden at phone widths, leaving a 22px mark as the only
+     way home. The tap area grows; the mark does not. */
+  .meimar-brand {
+    min-block-size: var(--touch-target);
+    min-inline-size: var(--touch-target);
+  }
+
+  /* Navigation and prose links: the tap area grows, the text does not. */
+  .meimar-site-header nav a,
+  .meimar-site-footer nav a,
+  .meimar-crumbs a,
+  .meimar-panel-permalink,
+  .meimar-features a,
+  .meimar-featured-districts > a,
+  .meimar-honesty a {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--touch-target);
+  }
+
+  .meimar-district-list a,
+  .meimar-featured-districts li a {
+    min-block-size: var(--touch-target);
+  }
+
+  /* A finger needs the whole row, not just the glyph. */
+  .meimar-services-list li {
+    padding-block: 8px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Content pages, narrow screens
+   --------------------------------------------------------------------------- */
+
+@media (max-width: 600px) {
+  /* Fixed 24px gutters cost 48px of a 360px screen. */
+  .meimar-landing,
+  .meimar-page {
+    padding-inline: 16px;
+  }
+
+  .meimar-hero {
+    padding-block: 36px 28px;
+  }
+
+  /* `auto-fit` with a 140px/260px minimum leaves orphan rows at phone widths;
+     one column reads better than two cramped ones. */
+  .meimar-hero-stats,
+  .meimar-features,
+  .meimar-featured-districts ul,
+  .meimar-district-list,
+  .meimar-estimate-form {
+    grid-template-columns: 1fr;
+  }
+
+  .meimar-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* A fixed 260px map is most of a short phone in landscape. */
+  .meimar-location-picker {
+    block-size: min(260px, 45dvh);
+  }
+
+  .meimar-hero-actions .meimar-button {
+    inline-size: 100%;
+    text-align: center;
+  }
+}
+
+/* Shown while the map's client boundary resolves. */
+.meimar-boot {
+  display: grid;
+  place-items: center;
+  block-size: 100dvh;
+  color: var(--ink-faint);
+  font-size: 14px;
+}

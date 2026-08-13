@@ -1,0 +1,31 @@
+[project]
+name = "meimar-api"
+version = "0.1.0"
+description = "Free-form price estimate and services-score endpoint for Meimar"
+requires-python = ">=3.11"
+
+# Serving only. The GPU stack that trains the models (cuDF, cuPy, cuML) lives in
+# ../Saudi_REAL_ESTATE_PROJECT/.venv and is deliberately absent here: inference
+# on one listing needs none of it, and carrying gigabytes of CUDA into a request
+# path would be the wrong trade.
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.7",
+    "xgboost>=3.0",
+    "pandas>=2.2",
+    "numpy>=1.26",
+    # GeoPandas is needed at serve time because amenity distance is measured to
+    # a facility's real geometry -- the edge of a hospital, not its centre.
+    # A point-only index would be lighter but would reintroduce the error that
+    # reported a park 2 km away from a listing facing it.
+    "geopandas>=1.0",
+    "pyarrow>=17.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["api"]

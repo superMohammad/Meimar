@@ -1,5 +1,26 @@
+# Dependencies and virtual environments
+node_modules/
 .venv/
-data/
-*.log
-.ipynb_checkpoints/
+.venv-api/
 __pycache__/
+*.pyc
+
+# Build output
+.next/
+out/
+*.tsbuildinfo
+
+# Generated data — rebuild with the pnpm data:* scripts
+meimar/public/data/*.geojson
+meimar/public/duckdb/
+
+# Font source archive; the web fonts live in meimar/public/fonts
+meimar/Assets/
+
+# Ad-hoc capture folder; published imagery lives in docs/images
+meimar/screenshots/
+
+# Local noise
+*.log
+.DS_Store
+.env*
