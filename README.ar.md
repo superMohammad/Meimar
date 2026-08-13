@@ -28,7 +28,9 @@
 
 <div align="center">
 
-![جولة في الخريطة](docs/images/map-tour.gif)
+<a href="docs/meimar-demo.mp4"><img src="docs/images/map-tour.gif" alt="جولة في الخريطة"></a>
+
+**[▶ شاهد العرض التعريفي (36 ثانية)](docs/meimar-demo.mp4)** — كل صفحات المنصة، بالعربية
 
 </div>
 
